@@ -36,9 +36,15 @@ function makeLineGraph (data, loc, selector) {
         width = 600 - margin.left - margin.right,
         height = 270 - margin.top - margin.bottom;
 
+    var colors = new Rainbow("#ff4e3d", "#1908ba");
+    colors.setNumberRange(0, data.length - 1);
+
     // Set the ranges
-    var x = d3.scaleLinear().range([0, width]);
-    var y = d3.scaleLinear().range([height, 0]);
+    var x = d3.scaleLinear().range([0, width])
+        .domain([0, d3.max(data, function(d) { return d.day; })]);
+    var y = d3.scaleLinear().range([height, 0])
+        .domain([0, 100]);
+
 
     // Define the axes
     var xAxis = d3.axisBottom(x)
@@ -61,10 +67,6 @@ function makeLineGraph (data, loc, selector) {
             .attr("transform", 
                   "translate(" + margin.left + "," + margin.top + ")");
 
-    // Scale the range of the data
-    x.domain([0, d3.max(data, function(d) { return d.day; })]);
-    y.domain([0, d3.max(data, function(d) { return d[loc]; })]);
-
     // Add the valueline path.
     svg.append("path")
         .attr("class", "line")
@@ -80,6 +82,23 @@ function makeLineGraph (data, loc, selector) {
     svg.append("g")
         .attr("class", "y axis")
         .call(yAxis);
+    /**
+     * This block of code draws the point at each data point
+     */
+    svg.selectAll("point")
+      .data(data)
+      .enter()
+      .append("circle")
+      .attr("class", "point")
+      .attr("transform", function(d) {
+        var coors = valueline([d]).slice(1).slice(0, -1);
+        return "translate(" + coors + ")"
+      })
+      .attr("r", 3)
+      .attr("stroke", "#000")
+      .attr("fill",function(d,i){
+        return "#" + colors.colourAt(i);
+      });
 }
 
 function drawPolar(data, loc, selector) {
