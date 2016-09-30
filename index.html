@@ -2,10 +2,55 @@
 <html>
   <head>
     <script src="d3/d3.js"></script>
-    <script src="polar.js"></script>
+    <style>
+        body { font: 12px Arial;}
+
+        path {
+            stroke: steelblue;
+            stroke-width: 2;
+            fill: none;
+        }
+
+        .axis path,
+        .axis line {
+            fill: none;
+            stroke: grey;
+            stroke-width: 1;
+            shape-rendering: crispEdges;
+        }
+
+
+        .frame {
+        fill: none;
+        stroke: #000;
+        }
+
+        .axis text {
+        font: 10px sans-serif;
+        }
+
+        .axis line,
+        .axis circle {
+        fill: none;
+        stroke: #777;
+        stroke-dasharray: 1,4;
+        }
+
+        .axis :last-of-type circle {
+        stroke: #333;
+        stroke-dasharray: none;
+        }
+
+        .line {
+        fill: none;
+        stroke: red;
+        stroke-width: 1.5px;
+        }
+    </style>
   </head>
   <body>
     <div id="graph">
     </div>
+    <script src="polar.js"></script>
   </body>
 </html>
