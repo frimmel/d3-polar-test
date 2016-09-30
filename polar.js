@@ -15,6 +15,21 @@ function parseRow (d) {
     }
 }
 
+var MONTH_LABELS = {
+    0: "Jan",
+    1: "Feb",
+    2: "Mar",
+    3: "Apr",
+    4: "May",
+    5: "Jun",
+    6: "Jul",
+    7: "Aug",
+    8: "Sep",
+    9: "Oct",
+    10: "Nov",
+    11: "Dec"
+};
+
 function makeLineGraph (data) {
     // Set the dimensions of the canvas / graph
     var margin = {top: 30, right: 20, bottom: 30, left: 50},
@@ -72,13 +87,16 @@ function drawPolar(data) {
         height = 500,
         radius = Math.min(width, height) / 2 - 30;
 
+    var colors = new Rainbow("#ff4e3d", "#1908ba");
+    colors.setNumberRange(0, data.length - 1);
+
     var r = d3.scaleLinear()
         .domain([0, 100])
         .range([0, 220]);
 
     var line = d3.radialLine()
         .radius(function(d) { return r(d.locc); })
-        .angle(function(d) { return -((((d.day - 1)%365)/365) * (2*Math.PI)) + (Math.PI / 2); });
+        .angle(function(d) { return ((((d.day - 1)%365)/365) * (2*Math.PI)) /*- (Math.PI / 2)*/; });
 
     var svg = d3.select("body").append("svg")
         .attr("width", width)
@@ -106,7 +124,7 @@ function drawPolar(data) {
         .selectAll("g")
         .data(d3.range(0, 360, 30))
         .enter().append("g")
-        .attr("transform", function(d) { return "rotate(" + (-d - 90) + ")"; });
+        .attr("transform", function(d) { return "rotate(" + (d - 90) + ")"; });
 
     ga.append("line")
         .attr("x2", radius);
@@ -114,14 +132,29 @@ function drawPolar(data) {
     ga.append("text")
         .attr("x", radius + 6)
         .attr("dy", ".35em")
-        .style("text-anchor", function(d) { return d < 180 && d > 0 ? "end" : null; })
-        .attr("transform", function(d) { return d < 180 && d > 0 ? "rotate(180 " + (radius + 6) + ",0)" : null; })
-        .text(function(d) { console.log("d: " + d);return d + "°"; });
+        .style("text-anchor", function(d) { return d < 360 && d > 180 ? "end" : null; })
+        .attr("transform", function(d) { return d < 360 && d > 180 ? "rotate(180 " + (radius + 6) + ",0)" : null; })
+        .text(function(d) { return MONTH_LABELS[d/30]; });
 
     svg.append("path")
         .datum(data)
         .attr("class", "line")
         .attr("d", line);
+
+    svg.selectAll("point")
+      .data(data)
+      .enter()
+      .append("circle")
+      .attr("class", "point")
+      .attr("transform", function(d) {
+        var coors = line([d]).slice(1).slice(0, -1);
+        return "translate(" + coors + ")"
+      })
+      .attr("r", 3)
+      .attr("stroke", "#000")
+      .attr("fill",function(d,i){
+        return "#" + colors.colourAt(i);
+      });
 }
 
 d3.request("data/modis_ndvi_samp.csv")
