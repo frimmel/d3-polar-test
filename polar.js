@@ -49,9 +49,14 @@ function makeLineGraph (data, loc, selector) {
     // Define the axes
     var xAxis = d3.axisBottom(x)
         .ticks(5);
-
+    
+    function formatScale (d) {
+        var ndviscale = ["0", "0.2", "0.4", "0.6", "0.8", "1"];
+        return ndviscale[d/20];
+    }
     var yAxis = d3.axisLeft(y)
-        .ticks(5);
+        .ticks(6)
+        .tickFormat(formatScale);
 
     // Define the line
     var valueline = d3.line()
