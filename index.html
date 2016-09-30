@@ -47,32 +47,79 @@
         stroke: #000;
         stroke-width: 1.5px;
         }
+
+        a {
+          color: rgb(0, 0, 238);
+          font-size: 16px;
+          cursor: pointer;
+          padding: 5px;
+        }
+
+        a.active {
+          font-weight: bold;
+        }
     </style>
   </head>
   <body>
-    <div id="graph">
+    <div id="links">
+      <a class="active" data-loc="locc">"C" Column</a>
+      <a data-loc="locd">"D" Column</a>
+      <a data-loc="loce">"E" Column</a>
+      <a data-loc="locf">"F" Column</a>
+      <a data-loc="locg">"G" Column</a>
+      <a data-loc="loch">"H" Column</a>
+      <a data-loc="loci">"I" Column</a>
+      <a data-loc="locj">"J" Column</a>
+      <a data-loc="lock">"K" Column</a>
+      <a data-loc="locl">"L" Column</a>
     </div>
+    <div id="all-data"></div>
+    <div id="year-data"></div>
+
     <script src="polar.js"></script>
     <script>
-        d3.request("data/modis_ndvi_samp.csv")
-            .mimeType("text/csv")
-            .response(function (xhr) { return d3.csvParseRows(xhr.responseText, parseRow)})
-            .get(function (data) {
-                d3.select("body").append("h2")
-                    .text("Full data");   
-                makeLineGraph(data, "locc");
-            drawPolar(data, "locc");
-        });
+        function drawGraphs(loc) {
+            d3.request("data/modis_ndvi_samp.csv")
+                .mimeType("text/csv")
+                .response(function (xhr) { return d3.csvParseRows(xhr.responseText, parseRow)})
+                .get(function (data) {
+                    d3.select("#all-data")
+                        .html("")
+                        .append("h2")
+                        .text("Full data");   
+                    makeLineGraph(data, loc, "#all-data");
+                    drawPolar(data, loc, "#all-data");
+            });
 
-        d3.request("data/modis_ndvi_samp_simp.csv")
-            .mimeType("text/csv")
-            .response(function (xhr) { return d3.csvParseRows(xhr.responseText, parseRow)})
-            .get(function (data) {
-                d3.select("body").append("h2")
-                    .text("One year of data");        
-                makeLineGraph(data, "locc");
-                drawPolar(data, "locc");
-        });
+            d3.request("data/modis_ndvi_samp_simp.csv")
+                .mimeType("text/csv")
+                .response(function (xhr) { return d3.csvParseRows(xhr.responseText, parseRow)})
+                .get(function (data) {
+                    d3.select("#year-data")
+                        .html("")
+                        .append("h2")
+                        .text("One year of data");        
+                    makeLineGraph(data, loc, "#year-data");
+                    drawPolar(data, loc, "#year-data");
+            });
+        }
+        drawGraphs("locc")
+    </script>
+    <script>
+      function resetGraph(elem) {
+          if (elem.tagName.toLowerCase() !== "a") {
+              return;
+          }
+          document.getElementsByClassName("active")[0].className = "";
+
+          elem.className = "active";
+          drawGraphs(elem.getAttribute("data-loc"));
+      }
+
+      document.getElementById("links").addEventListener("click", function (e) {
+          e.preventDefault();
+          resetGraph(e.target);
+      });
     </script>
   </body>
 </html>

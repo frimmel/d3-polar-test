@@ -30,7 +30,7 @@ var MONTH_LABELS = {
     11: "Dec"
 };
 
-function makeLineGraph (data, loc) {
+function makeLineGraph (data, loc, selector) {
     // Set the dimensions of the canvas / graph
     var margin = {top: 30, right: 20, bottom: 30, left: 50},
         width = 600 - margin.left - margin.right,
@@ -53,7 +53,7 @@ function makeLineGraph (data, loc) {
         .y(function(d) { return y(d[loc]); });
     
     // Adds the svg canvas
-    var svg = d3.select("body")
+    var svg = d3.select(selector)
         .append("svg")
             .attr("width", width + margin.left + margin.right)
             .attr("height", height + margin.top + margin.bottom)
@@ -82,7 +82,7 @@ function makeLineGraph (data, loc) {
         .call(yAxis);
 }
 
-function drawPolar(data, loc) {
+function drawPolar(data, loc, selector) {
     var width = 960,
         height = 500,
         radius = Math.min(width, height) / 2 - 30;
@@ -114,7 +114,7 @@ function drawPolar(data, loc) {
     /**
      * Sets up the canvas where the circle will be drawn.
      */
-    var svg = d3.select("body").append("svg")
+    var svg = d3.select(selector).append("svg")
         .attr("width", width)
         .attr("height", height)
         .append("g")
