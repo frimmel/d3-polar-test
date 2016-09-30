@@ -186,23 +186,3 @@ function drawPolar(data, loc) {
       });
 }
 
-d3.request("data/modis_ndvi_samp.csv")
-    .mimeType("text/csv")
-    .response(function (xhr) { return d3.csvParseRows(xhr.responseText, parseRow)})
-    .get(function (data) {
-        d3.select("body").append("h2")
-            .text("Full data");   
-        makeLineGraph(data, "locc");
-        drawPolar(data, "locc");
-    })
-
-d3.request("data/modis_ndvi_samp_simp.csv")
-    .mimeType("text/csv")
-    .response(function (xhr) { return d3.csvParseRows(xhr.responseText, parseRow)})
-    .get(function (data) {
-        d3.select("body").append("h2")
-            .text("One year of data");        
-        makeLineGraph(data, "locc");
-        drawPolar(data, "locc");
-    })
-
