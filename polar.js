@@ -106,6 +106,97 @@ function makeLineGraph (data, loc, selector) {
       });
 }
 
+function makeOverlapingLineGraph (data, loc, selector) {
+    // Set the dimensions of the canvas / graph
+    var margin = {top: 30, right: 20, bottom: 30, left: 50},
+        width = 600 - margin.left - margin.right,
+        height = 270 - margin.top - margin.bottom;
+
+    var colors = new Rainbow("#ff4e3d", "#1908ba");
+    colors.setNumberRange(0, data.length - 1);
+
+    // Set the ranges
+    var x = d3.scaleLinear().range([0, width])
+        .domain([0, 365]);
+    var y = d3.scaleLinear().range([height, 0])
+        .domain([0, 100]);
+
+    // Define the axes
+    function formatMonth (d) {
+        return (MONTH_LABELS[(d-15)/30]);
+    }
+    var xAxis = d3.axisBottom(x)
+        .ticks(11)
+        .tickValues([15, 45, 75, 105, 135, 165, 195, 225, 255, 285, 315, 345])
+        .tickFormat(formatMonth);
+    
+    function formatScale (d) {
+        var ndviscale = ["0", "0.2", "0.4", "0.6", "0.8", "1"];
+        return ndviscale[d/20];
+    }
+    var yAxis = d3.axisLeft(y)
+        .ticks(6)
+        .tickFormat(formatScale);
+
+    // Define the line
+    var valueline = d3.line()
+        .x(function(d) { return x((d.day%365)); })
+        .y(function(d) { return y(d[loc]); });
+    
+    // Adds the svg canvas
+    var svg = d3.select(selector)
+        .append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+            .attr("transform", 
+                  "translate(" + margin.left + "," + margin.top + ")");
+
+    // Add the X Axis
+    svg.append("g")
+        .attr("class", "x axis")
+        .attr("transform", "translate(0," + height + ")")
+        .call(xAxis);
+
+    // Add the Y Axis
+    svg.append("g")
+        .attr("class", "y axis")
+        .call(yAxis);
+
+    // Reprocess the data
+    var yeardata = [];
+    var index;
+    for (index = 0; index < data.length; index += 46) {
+        console.log(data.slice(index, index+46))
+      yeardata.push(data.slice(index, index+46));
+    }
+        console.log(yeardata)
+    // Add the valueline path.
+    svg.selectAll("svg")
+        .data(d3.range(0,yeardata.length,1))
+        .enter()
+        .append("path")
+        .attr("class", "line")
+        .attr("d", function (d) { console.log(yeardata[d]); return valueline(yeardata[d]); });
+    /**
+     * This block of code draws the point at each data point
+     */
+    svg.selectAll("point")
+      .data(data)
+      .enter()
+      .append("circle")
+      .attr("class", "point")
+      .attr("transform", function(d) {
+        var coors = valueline([d]).slice(1).slice(0, -1);
+        return "translate(" + coors + ")"
+      })
+      .attr("r", 3)
+      .attr("stroke", "#000")
+      .attr("fill",function(d,i){
+        return "#" + colors.colourAt(i);
+      });
+}
+
 function drawPolar(data, loc, selector) {
     var width = 960,
         height = 500,
