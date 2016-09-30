@@ -30,7 +30,7 @@ var MONTH_LABELS = {
     11: "Dec"
 };
 
-function makeLineGraph (data) {
+function makeLineGraph (data, loc) {
     // Set the dimensions of the canvas / graph
     var margin = {top: 30, right: 20, bottom: 30, left: 50},
         width = 600 - margin.left - margin.right,
@@ -50,7 +50,7 @@ function makeLineGraph (data) {
     // Define the line
     var valueline = d3.line()
         .x(function(d) { return x(d.day); })
-        .y(function(d) { return y(d.locc); });
+        .y(function(d) { return y(d[loc]); });
     
     // Adds the svg canvas
     var svg = d3.select("body")
@@ -63,7 +63,7 @@ function makeLineGraph (data) {
 
     // Scale the range of the data
     x.domain([0, d3.max(data, function(d) { return d.day; })]);
-    y.domain([0, d3.max(data, function(d) { return d.locc; })]);
+    y.domain([0, d3.max(data, function(d) { return d[loc]; })]);
 
     // Add the valueline path.
     svg.append("path")
@@ -82,7 +82,7 @@ function makeLineGraph (data) {
         .call(yAxis);
 }
 
-function drawPolar(data) {
+function drawPolar(data, loc) {
     var width = 960,
         height = 500,
         radius = Math.min(width, height) / 2 - 30;
@@ -108,7 +108,7 @@ function drawPolar(data) {
      * it by 2 pi.
      */
     var line = d3.radialLine()
-        .radius(function(d) { return r(d.locc); })
+        .radius(function(d) { return r(d[loc]); })
         .angle(function(d) { return ((((d.day - 1)%365)/365) * (2*Math.PI)); });
 
     /**
@@ -190,15 +190,19 @@ d3.request("data/modis_ndvi_samp.csv")
     .mimeType("text/csv")
     .response(function (xhr) { return d3.csvParseRows(xhr.responseText, parseRow)})
     .get(function (data) {
-        makeLineGraph(data);
-        drawPolar(data);
+        d3.select("body").append("h2")
+            .text("Full data");   
+        makeLineGraph(data, "locc");
+        drawPolar(data, "locc");
     })
 
 d3.request("data/modis_ndvi_samp_simp.csv")
     .mimeType("text/csv")
     .response(function (xhr) { return d3.csvParseRows(xhr.responseText, parseRow)})
     .get(function (data) {
-        makeLineGraph(data);
-        drawPolar(data);
+        d3.select("body").append("h2")
+            .text("One year of data");        
+        makeLineGraph(data, "locc");
+        drawPolar(data, "locc");
     })
 
