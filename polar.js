@@ -3,15 +3,15 @@ function parseRow (d) {
         "year": d[0],
         day: +d[1],
         locc: +d[2],
-        locd: d[3],
-        loce: d[4],
-        locf: d[5],
-        locg: d[6],
-        loch: d[7],
-        loci: d[8],
-        locj: d[9],
-        lock: d[10],
-        locl: d[11]
+        locd: +d[3],
+        loce: +d[4],
+        locf: +d[5],
+        locg: +d[6],
+        loch: +d[7],
+        loci: +d[8],
+        locj: +d[9],
+        lock: +d[10],
+        locl: +d[11]
     }
 }
 
@@ -90,20 +90,39 @@ function drawPolar(data) {
     var colors = new Rainbow("#ff4e3d", "#1908ba");
     colors.setNumberRange(0, data.length - 1);
 
+    /**
+     * Sets up scaling of data. We know that the ndvi values fall between
+     * 0 & 100 so we set our domain to that. The range controls where the
+     * points will lie in our graph, so we set them to be between 0 and the
+     * radius.
+     */
     var r = d3.scaleLinear()
         .domain([0, 100])
-        .range([0, 220]);
+        .range([0, radius]);
 
+    /**
+     * function which will draw each point. To compute the distance from the
+     * center each point is we pass the datapoint to the function defined above.
+     * To determine the angle from the origin we need to convert the day to
+     * radians, so we convert the day to a number between 0 & 1 and then multiply
+     * it by 2 pi.
+     */
     var line = d3.radialLine()
         .radius(function(d) { return r(d.locc); })
-        .angle(function(d) { return ((((d.day - 1)%365)/365) * (2*Math.PI)) /*- (Math.PI / 2)*/; });
+        .angle(function(d) { return ((((d.day - 1)%365)/365) * (2*Math.PI)); });
 
+    /**
+     * Sets up the canvas where the circle will be drawn.
+     */
     var svg = d3.select("body").append("svg")
         .attr("width", width)
         .attr("height", height)
         .append("g")
         .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
 
+    /**
+     * This block of code draws the big circles of the graph & their labels
+     */
     var gr = svg.append("g")
         .attr("class", "r axis")
         .selectAll("g")
@@ -119,6 +138,10 @@ function drawPolar(data) {
         .style("text-anchor", "middle")
         .text(function(d) { return d/100; });
 
+    /**
+     * This block of code draws the labels for each month and the lines
+     * that go out to them.
+     */
     var ga = svg.append("g")
         .attr("class", "a axis")
         .selectAll("g")
@@ -136,11 +159,17 @@ function drawPolar(data) {
         .attr("transform", function(d) { return d < 360 && d > 180 ? "rotate(180 " + (radius + 6) + ",0)" : null; })
         .text(function(d) { return MONTH_LABELS[d/30]; });
 
+    /**
+     * This block of code draws the line that the data follows
+     */
     svg.append("path")
         .datum(data)
         .attr("class", "line")
         .attr("d", line);
 
+    /**
+     * This block of code draws the point at each data point
+     */
     svg.selectAll("point")
       .data(data)
       .enter()
