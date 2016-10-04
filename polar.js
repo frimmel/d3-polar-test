@@ -50,13 +50,8 @@ function makeLineGraph (data, loc, selector) {
     var xAxis = d3.axisBottom(x)
         .ticks(5);
     
-    function formatScale (d) {
-        var ndviscale = ["0", "0.2", "0.4", "0.6", "0.8", "1"];
-        return ndviscale[d/20];
-    }
     var yAxis = d3.axisLeft(y)
-        .ticks(6)
-        .tickFormat(formatScale);
+        .ticks(6);
 
     // Define the line
     var valueline = d3.line()
@@ -130,13 +125,8 @@ function makeOverlapingLineGraph (data, loc, selector) {
         .tickValues([15, 45, 75, 105, 135, 165, 195, 225, 255, 285, 315, 345])
         .tickFormat(formatMonth);
     
-    function formatScale (d) {
-        var ndviscale = ["0", "0.2", "0.4", "0.6", "0.8", "1"];
-        return ndviscale[d/20];
-    }
     var yAxis = d3.axisLeft(y)
-        .ticks(6)
-        .tickFormat(formatScale);
+        .ticks(6);
 
     // Define the line
     var valueline = d3.line()
@@ -251,7 +241,7 @@ function drawPolar(data, loc, selector) {
         .attr("y", function(d) { return -r(d) - 4; })
         .attr("transform", "rotate(15)")
         .style("text-anchor", "middle")
-        .text(function(d) { return d/100; });
+        .text(function(d) { return d; });
 
     /**
      * This block of code draws the labels for each month and the lines
