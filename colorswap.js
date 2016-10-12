@@ -30,14 +30,56 @@ var MONTH_LABELS = {
     11: "Dec"
 };
 
-function makeLineGraph (data, loc, selector) {
+function processColorData (data, loc) {
+//    var loc_data = data[loc]
+    var averages = [];
+    var loc_averages;
+    var median;
+    var i, j;
+
+    for (i = 0; i < 46; i++) {
+        loc_averages = [];
+        for (j = i; j < data.length; j += 46) {
+            loc_averages.push(data[j][loc]);
+        }
+
+        median = loc_averages.sort()[Math.floor(loc_averages.length/2)];
+        averages.push(median);
+    }
+
+    return averages;
+}
+
+function findOverallMedian (data, loc) {
+    var averages = [];
+    var i;
+
+    for (i = 0; i < data.length; i++) {
+        averages.push(data[i][loc]);
+    }
+
+    return averages.sort()[Math.floor(averages.length/2)];
+}
+
+function computeColor (value, median, scale) {
+    var diff = value - median;
+    var percent_diff = (Math.abs(diff)/median) * 100 * scale;
+    var lightness = (100 - percent_diff) + "%";
+
+    if (diff > 0) {
+        return "hsl(8, 79%, " + lightness + ")";
+    } else {
+        return "hsl(219, 79%, " + lightness + ")";
+    }
+}
+
+function makeUpDownLineGraph (data, loc, selector) {
     // Set the dimensions of the canvas / graph
     var margin = {top: 30, right: 20, bottom: 30, left: 50},
         width = 600 - margin.left - margin.right,
         height = 270 - margin.top - margin.bottom;
 
-    var colors = new Rainbow("#ff4e3d", "#1908ba");
-    colors.setNumberRange(0, data.length - 1);
+    var median = findOverallMedian(data, loc);
 
     // Set the ranges
     var x = d3.scaleLinear().range([0, width])
@@ -97,18 +139,17 @@ function makeLineGraph (data, loc, selector) {
       .attr("r", 3)
       .attr("stroke", "#000")
       .attr("fill",function(d,i){
-        return "#" + colors.colourAt(i);
+        return computeColor(d[loc], median, 1.5);
       });
 }
 
-function makeOverlapingLineGraph (data, loc, selector) {
+function makeUpDownOverlapingLineGraph (data, loc, selector) {
     // Set the dimensions of the canvas / graph
     var margin = {top: 30, right: 20, bottom: 30, left: 50},
         width = 600 - margin.left - margin.right,
         height = 270 - margin.top - margin.bottom;
 
-    var colors = new Rainbow("#ff4e3d", "#1908ba");
-    colors.setNumberRange(0, data.length - 1);
+    var averages = processColorData(data, loc);
 
     // Set the ranges
     var x = d3.scaleLinear().range([0, width])
@@ -157,15 +198,17 @@ function makeOverlapingLineGraph (data, loc, selector) {
     var yeardata = [];
     var index;
     for (index = 0; index < data.length; index += 46) {
+        console.log(data.slice(index, index+46))
       yeardata.push(data.slice(index, index+46));
     }
+        console.log(yeardata)
     // Add the valueline path.
     svg.selectAll("svg")
         .data(d3.range(0,yeardata.length,1))
         .enter()
         .append("path")
         .attr("class", "line")
-        .attr("d", function (d) { return valueline(yeardata[d]); });
+        .attr("d", function (d) { console.log(yeardata[d]); return valueline(yeardata[d]); });
     /**
      * This block of code draws the point at each data point
      */
@@ -181,17 +224,16 @@ function makeOverlapingLineGraph (data, loc, selector) {
       .attr("r", 3)
       .attr("stroke", "#000")
       .attr("fill",function(d,i){
-        return "#" + colors.colourAt(i);
+        return computeColor(d[loc], averages[i%46], 3);
       });
 }
 
-function drawPolar(data, loc, selector) {
+function drawUpDownPolar(data, loc, selector) {
     var width = 960,
         height = 500,
         radius = Math.min(width, height) / 2 - 30;
 
-    var colors = new Rainbow("#ff4e3d", "#1908ba");
-    colors.setNumberRange(0, data.length - 1);
+    var averages = processColorData(data, loc);
 
     /**
      * Sets up scaling of data. We know that the ndvi values fall between
@@ -285,7 +327,6 @@ function drawPolar(data, loc, selector) {
       .attr("r", 3)
       .attr("stroke", "#000")
       .attr("fill",function(d,i){
-        return "#" + colors.colourAt(i);
+        return computeColor(d[loc], averages[i%46], 3);
       });
 }
-

@@ -77,6 +77,7 @@
     <div id="year-data"></div>
 
     <script src="polar.js"></script>
+    <script src="colorswap.js"></script>
     <script>
         function drawGraphs(loc) {
             d3.request("data/modis_ndvi_samp.csv")
@@ -87,8 +88,11 @@
                         .html("")
                         .append("h2")
                         .text("Full data");   
+                    makeUpDownOverlapingLineGraph(data, loc, "#all-data");
                     makeOverlapingLineGraph(data, loc, "#all-data");
+                    makeUpDownLineGraph(data, loc, "#all-data");
                     makeLineGraph(data, loc, "#all-data");
+                    drawUpDownPolar(data, loc, "#all-data");
                     drawPolar(data, loc, "#all-data");
             });
 
