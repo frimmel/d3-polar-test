@@ -126,12 +126,13 @@
                         .html("")
                         .append("h2")
                         .text("Full data");   
-                    makeUpDownOverlapingLineGraph(data, loc, "#all-data");
                     makeOverlapingLineGraph(data, loc, "#all-data");
-                    makeUpDownLineGraph(data, loc, "#all-data");
                     makeLineGraph(data, loc, "#all-data");
-                    drawUpDownPolar(data, loc, "#all-data");
                     drawPolar(data, loc, "#all-data");
+                    makeUpDownOverlapingLineGraph(data, loc, "#all-data");
+                    makeUpDownLineGraph(data, loc, "#all-data");
+                    makeUpDownAverageLineGraph(data, loc, "#all-data");
+                    drawUpDownPolar(data, loc, "#all-data");
             });
 
             d3.request("data/modis_ndvi_samp_simp.csv")
