@@ -198,17 +198,15 @@ function makeUpDownOverlapingLineGraph (data, loc, selector) {
     var yeardata = [];
     var index;
     for (index = 0; index < data.length; index += 46) {
-        console.log(data.slice(index, index+46))
       yeardata.push(data.slice(index, index+46));
     }
-        console.log(yeardata)
     // Add the valueline path.
     svg.selectAll("svg")
         .data(d3.range(0,yeardata.length,1))
         .enter()
         .append("path")
         .attr("class", "line")
-        .attr("d", function (d) { console.log(yeardata[d]); return valueline(yeardata[d]); });
+        .attr("d", function (d) { return valueline(yeardata[d]); });
     /**
      * This block of code draws the point at each data point
      */

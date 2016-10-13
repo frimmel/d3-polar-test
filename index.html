@@ -54,9 +54,47 @@
           cursor: pointer;
           padding: 5px;
         }
-
         a.active {
           font-weight: bold;
+        }
+
+        div.tooltip {
+          position: absolute;
+          text-align: center;
+          width: 80px;
+          height: 28px;
+          padding: 2px;
+          font: 12px sans-serif;
+          background: lightsteelblue;
+          border: 0px;
+          border-radius: 8px;
+          pointer-events: none;
+          z-index: 10;
+        }
+
+        div.tooltip:after {
+          width: 0;
+          height: 0;
+          position: absolute;
+          border-left: 4px solid transparent;
+          border-right: 4px solid transparent;
+          border-top: 8px solid lightsteelblue;
+          bottom: -8px;
+          left: 40px;
+          content: "";
+          z-index: 10;
+        }
+
+        svg {
+          position: relative;
+        }
+
+        circle {
+          z-index: 0;
+        }
+
+        .graph-wrapper {
+          position: relative;
         }
     </style>
   </head>

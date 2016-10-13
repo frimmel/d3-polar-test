@@ -186,7 +186,7 @@ function makeOverlapingLineGraph (data, loc, selector) {
 }
 
 function drawPolar(data, loc, selector) {
-    var width = 960,
+    var width = 500,
         height = 500,
         radius = Math.min(width, height) / 2 - 30;
 
@@ -217,7 +217,10 @@ function drawPolar(data, loc, selector) {
     /**
      * Sets up the canvas where the circle will be drawn.
      */
-    var svg = d3.select(selector).append("svg")
+    var wrapper = d3.select(selector).append("div")
+        .classed("graph-wrapper", true);
+
+    var svg = wrapper.append("svg")
         .attr("width", width)
         .attr("height", height)
         .append("g")
@@ -270,22 +273,59 @@ function drawPolar(data, loc, selector) {
         .attr("class", "line")
         .attr("d", line);
 
+    // Define the div for the tooltip
+    var div = wrapper.append("div")
+        .attr("class", "tooltip")
+        .style("opacity", 0);
+
     /**
      * This block of code draws the point at each data point
      */
     svg.selectAll("point")
-      .data(data)
-      .enter()
-      .append("circle")
-      .attr("class", "point")
-      .attr("transform", function(d) {
-        var coors = line([d]).slice(1).slice(0, -1);
-        return "translate(" + coors + ")"
-      })
-      .attr("r", 3)
-      .attr("stroke", "#000")
-      .attr("fill",function(d,i){
-        return "#" + colors.colourAt(i);
-      });
+        .data(data)
+        .enter()
+        .append("circle")
+        .attr("class", "point")
+        .attr("cx", function(d) {
+            return line([d]).split(",")[0].slice(1);
+        })
+        .attr("cy", function(d) {
+            return line([d]).split(",")[1].slice(0, -1);
+        })
+        .attr("r", 3)
+        .attr("stroke", "#000")
+        .attr("fill",function(d,i){
+            return "#" + colors.colourAt(i);
+        })
+        .on("mouseover", function(d) {
+//            console.log(this.getAttribute("cx"))
+//            console.log(d3.event.pageX)
+//            console.log(this.getAttribute("cy"))
+//            console.log(d3.event.pageY)
+//            console.log(d3.event)
+            div.transition()
+                .duration(20)
+                .style("opacity", 1);
+            div.html(d.year + "<br/>"  + d[loc]);
+
+            var circleBBox = this.getBoundingClientRect();
+            console.log(circleBBox)
+            var tooltipBBox = div.node().getBoundingClientRect();
+
+            div.style("left", circleBBox.left + (circleBBox.width/2) - (tooltipBBox.width/2) + "px")
+                .style("top", circleBBox.top + (circleBBox.height/2) - (tooltipBBox.height) - 10 + "px");
+            
+
+            this.setAttribute("r", 5)
+            this.setAttribute("stroke-width", "2px")
+//.style("zIndex", 5);
+
+        })
+        .on("mouseout", function(d) {
+            div.transition()
+                .style("opacity", 0);
+            this.setAttribute("r", 3)
+            this.setAttribute("stroke-width", "1px")
+        });
 }
 
