@@ -2,9 +2,15 @@
 <html>
   <head>
     <script src="d3/d3.js"></script>
+    <script src="d3-tip/d3-tip.js"></script>
     <script src="rainbowvis/rainbowvis.js"></script>
+    <link href="d3-tip/d3-tip.css" media="all" rel="stylesheet"></link>
     <style>
         body { font: 12px Arial;}
+
+        * {
+            box-sizing: border-box;
+        }
 
         path {
             stroke: steelblue;
@@ -90,7 +96,12 @@
         }
 
         circle {
+          position: relative;
           z-index: 0;
+        }
+
+        circle.active {
+          z-index: 100;
         }
 
         .graph-wrapper {

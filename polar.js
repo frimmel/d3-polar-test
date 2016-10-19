@@ -190,6 +190,8 @@ function drawPolar(data, loc, selector) {
         height = 500,
         radius = Math.min(width, height) / 2 - 30;
 
+    var tip = d3.tip().attr('class', 'd3-tip').html(function (d) { return d; });
+
     var colors = new Rainbow("#ff4e3d", "#1908ba");
     colors.setNumberRange(0, data.length - 1);
 
@@ -225,6 +227,8 @@ function drawPolar(data, loc, selector) {
         .attr("height", height)
         .append("g")
         .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+
+    svg.call(tip)
 
     /**
      * This block of code draws the big circles of the graph & their labels
@@ -298,34 +302,79 @@ function drawPolar(data, loc, selector) {
             return "#" + colors.colourAt(i);
         })
         .on("mouseover", function(d) {
-//            console.log(this.getAttribute("cx"))
-//            console.log(d3.event.pageX)
-//            console.log(this.getAttribute("cy"))
-//            console.log(d3.event.pageY)
-//            console.log(d3.event)
-            div.transition()
-                .duration(20)
-                .style("opacity", 1);
-            div.html(d.year + "<br/>"  + d[loc]);
-
-            var circleBBox = this.getBoundingClientRect();
-            console.log(circleBBox)
-            var tooltipBBox = div.node().getBoundingClientRect();
-
-            div.style("left", circleBBox.left + (circleBBox.width/2) - (tooltipBBox.width/2) + "px")
-                .style("top", circleBBox.top + (circleBBox.height/2) - (tooltipBBox.height) - 10 + "px");
-            
-
-            this.setAttribute("r", 5)
-            this.setAttribute("stroke-width", "2px")
-//.style("zIndex", 5);
-
+            var date = dateToMonthDay(d.year)
+            tip.show(date[1] + ", " + date[0] + ": "  + d[loc]);
+            this.setAttribute("r", 5);
+            this.setAttribute("stroke-width", "2px");
+            d3.select(this).classed("active", true);
         })
-        .on("mouseout", function(d) {
-            div.transition()
-                .style("opacity", 0);
-            this.setAttribute("r", 3)
-            this.setAttribute("stroke-width", "1px")
+        .on("mouseout", function (d) {
+            tip.hide();
+            this.setAttribute("r", 3);
+            this.setAttribute("stroke-width", "1px");
+            d3.select(this).classed("active", true);
         });
 }
 
+function dateToMonthDay (date) {
+    date = date.split(".");
+    var leapYearCounter = (parseInt(date[0], 10) % 4) ? 0 : 1;
+
+    var day = Math.floor(parseFloat("." + date[1]) * (365 + leapYearCounter));
+
+    var jan = 31;
+    var feb = jan + 28 + leapYearCounter;
+    var mar = feb + 31;
+    var apr = mar + 30;
+    var may = apr + 31;
+    var jun = may + 30;
+    var jul = jun + 31;
+    var aug = jul + 31;
+    var sep = aug + 30;
+    var oct = sep + 31;
+    var nov = oct + 30;
+    var dec = nov + 31;
+
+    if (day < jan) {
+        date[1] = "Jan. " + ordinal_suffix_of(day);
+    } else if (day < feb) {
+        date[1] = "Feb. " + ordinal_suffix_of(day - jan);
+    } else if (day < mar) {
+        date[1] = "Mar. " + ordinal_suffix_of(day - feb);
+    } else if (day < apr) {
+        date[1] = "Apr. " + ordinal_suffix_of(day - mar);
+    } else if (day < may) {
+        date[1] = "May. " + ordinal_suffix_of(day - apr);
+    } else if (day < jun) {
+        date[1] = "Jun. " + ordinal_suffix_of(day - may);
+    } else if (day < jul) {
+        date[1] = "Jul. " + ordinal_suffix_of(day - jun);
+    } else if (day < aug) {
+        date[1] = "Aug. " + ordinal_suffix_of(day - jul);
+    } else if (day < sep) {
+        date[1] = "Sep. " + ordinal_suffix_of(day - aug);
+    } else if (day < oct) {
+        date[1] = "Oct. " + ordinal_suffix_of(day - sep);
+    } else if (day < nov) {
+        date[1] = "Nov. " + ordinal_suffix_of(day - oct);
+    } else if (day < dec) {
+        date[1] = "Dec. " + ordinal_suffix_of(day - nov);
+    }
+
+    return date;
+}
+
+function ordinal_suffix_of(i) {
+    var j = i % 10,
+        k = i % 100;
+    if (j == 1 && k != 11) {
+        return i + "st";
+    }
+    if (j == 2 && k != 12) {
+        return i + "nd";
+    }
+    if (j == 3 && k != 13) {
+        return i + "rd";
+    }
+    return i + "th";
+}
