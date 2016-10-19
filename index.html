@@ -122,28 +122,44 @@
       <a data-loc="lock">"K" Column</a>
       <a data-loc="locl">"L" Column</a>
     </div>
-    <div id="all-data"></div>
+    <div id="all-data">
+      <h2>Full data</h2>
+    </div>
+    <div id="all-data-timescale"></div>
+    <div id="all-data-periodic"></div>
+    <div id="all-data-median"></div>
     <div id="year-data"></div>
 
     <script src="polar.js"></script>
     <script src="colorswap.js"></script>
+    <script src="median-colorswap.js"></script>
     <script>
         function drawGraphs(loc) {
             d3.request("data/modis_ndvi_samp.csv")
                 .mimeType("text/csv")
                 .response(function (xhr) { return d3.csvParseRows(xhr.responseText, parseRow)})
                 .get(function (data) {
-                    d3.select("#all-data")
+                    d3.select("#all-data-timescale")
+                        .html("")
+                        .append("h3")
+                        .text("Colors change based on time");
+                    d3.select("#all-data-periodic")
+                        .html("")
+                        .append("h3")
+                        .text("Colors show the difference from the median of each 8 day period");
+                    d3.select("#all-data-median")
                         .html("")
                         .append("h2")
-                        .text("Full data");   
-                    makeOverlapingLineGraph(data, loc, "#all-data");
-                    makeLineGraph(data, loc, "#all-data");
-                    drawPolar(data, loc, "#all-data");
-                    makeUpDownOverlapingLineGraph(data, loc, "#all-data");
-                    makeUpDownLineGraph(data, loc, "#all-data");
-                    makeUpDownAverageLineGraph(data, loc, "#all-data");
-                    drawUpDownPolar(data, loc, "#all-data");
+                        .text("Colors show the differnce from the overall median of the data");
+                    makeOverlapingLineGraph(data, loc, "#all-data-timescale");
+                    makeLineGraph(data, loc, "#all-data-timescale");
+                    drawPolar(data, loc, "#all-data-timescale");
+                    makeUpDownOverlapingLineGraph(data, loc, "#all-data-periodic");
+                    makeUpDownLineGraph(data, loc, "#all-data-periodic");
+                    drawUpDownPolar(data, loc, "#all-data-periodic");
+                    makeUpDownAverageOverlapingLineGraph(data, loc, "#all-data-median");
+                    makeUpDownAverageLineGraph(data, loc, "#all-data-median");
+                    drawUpDownAveragePolar(data, loc, "#all-data-median");
             });
 
             d3.request("data/modis_ndvi_samp_simp.csv")

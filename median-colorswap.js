@@ -32,24 +32,15 @@ var MONTH_LABELS = {
 
 var tip = d3.tip().attr('class', 'd3-tip').html(function (d) { return d; });
 
-function processColorData (data, loc) {
-//    var loc_data = data[loc]
+function findOverallMedian (data, loc) {
     var averages = [];
-    var loc_averages;
-    var median;
-    var i, j;
+    var i;
 
-    for (i = 0; i < 46; i++) {
-        loc_averages = [];
-        for (j = i; j < data.length; j += 46) {
-            loc_averages.push(data[j][loc]);
-        }
-
-        median = loc_averages.sort()[Math.floor(loc_averages.length/2)];
-        averages.push(median);
+    for (i = 0; i < data.length; i++) {
+        averages.push(data[i][loc]);
     }
 
-    return averages;
+    return averages.sort()[Math.floor(averages.length/2)];
 }
 
 function computeColor (value, median, scale) {
@@ -64,13 +55,13 @@ function computeColor (value, median, scale) {
     }
 }
 
-function makeUpDownLineGraph (data, loc, selector) {
+function makeUpDownAverageLineGraph (data, loc, selector) {
     // Set the dimensions of the canvas / graph
     var margin = {top: 30, right: 20, bottom: 30, left: 50},
         width = 600 - margin.left - margin.right,
         height = 270 - margin.top - margin.bottom;
 
-    var averages = processColorData(data, loc);
+    var median = findOverallMedian(data, loc);
 
     // Set the ranges
     var x = d3.scaleLinear().range([0, width])
@@ -135,7 +126,7 @@ function makeUpDownLineGraph (data, loc, selector) {
       .attr("r", 3)
       .attr("stroke", "#000")
       .attr("fill",function(d,i){
-        return computeColor(d[loc], averages[i%46], 3);
+        return computeColor(d[loc], median, 1.5);
       })
         .on("mouseover", function(d) {
             var date = dateToMonthDay(d.year)
@@ -152,13 +143,13 @@ function makeUpDownLineGraph (data, loc, selector) {
         });
 }
 
-function makeUpDownOverlapingLineGraph (data, loc, selector) {
+function makeUpDownAverageOverlapingLineGraph (data, loc, selector) {
     // Set the dimensions of the canvas / graph
     var margin = {top: 30, right: 20, bottom: 30, left: 50},
         width = 600 - margin.left - margin.right,
         height = 270 - margin.top - margin.bottom;
 
-    var averages = processColorData(data, loc);
+    var median = findOverallMedian(data, loc);
 
     // Set the ranges
     var x = d3.scaleLinear().range([0, width])
@@ -233,7 +224,7 @@ function makeUpDownOverlapingLineGraph (data, loc, selector) {
       .attr("r", 3)
       .attr("stroke", "#000")
       .attr("fill",function(d,i){
-        return computeColor(d[loc], averages[i%46], 3);
+        return computeColor(d[loc], median, 1.5);
       })
         .on("mouseover", function(d) {
             var date = dateToMonthDay(d.year)
@@ -250,12 +241,12 @@ function makeUpDownOverlapingLineGraph (data, loc, selector) {
         });
 }
 
-function drawUpDownPolar(data, loc, selector) {
+function drawUpDownAveragePolar(data, loc, selector) {
     var width = 500,
         height = 500,
         radius = Math.min(width, height) / 2 - 30;
 
-    var averages = processColorData(data, loc);
+    var median = findOverallMedian(data, loc);
 
     /**
      * Sets up scaling of data. We know that the ndvi values fall between
@@ -351,7 +342,7 @@ function drawUpDownPolar(data, loc, selector) {
       .attr("r", 3)
       .attr("stroke", "#000")
       .attr("fill",function(d,i){
-        return computeColor(d[loc], averages[i%46], 3);
+        return computeColor(d[loc], median, 1.5);
       })
         .on("mouseover", function(d) {
             var date = dateToMonthDay(d.year)
