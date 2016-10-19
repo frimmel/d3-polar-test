@@ -30,6 +30,8 @@ var MONTH_LABELS = {
     11: "Dec"
 };
 
+var tip = d3.tip().attr('class', 'd3-tip').html(function (d) { return d; });
+
 function processColorData (data, loc) {
 //    var loc_data = data[loc]
     var averages = [];
@@ -109,6 +111,8 @@ function makeUpDownLineGraph (data, loc, selector) {
             .attr("transform", 
                   "translate(" + margin.left + "," + margin.top + ")");
 
+    svg.call(tip);
+
     // Add the valueline path.
     svg.append("path")
         .attr("class", "line")
@@ -140,7 +144,20 @@ function makeUpDownLineGraph (data, loc, selector) {
       .attr("stroke", "#000")
       .attr("fill",function(d,i){
         return computeColor(d[loc], averages[i%46], 3);
-      });
+      })
+        .on("mouseover", function(d) {
+            var date = dateToMonthDay(d.year)
+            tip.show(date[1] + ", " + date[0] + ": "  + d[loc]);
+            this.setAttribute("r", 5);
+            this.setAttribute("stroke-width", "2px");
+            d3.select(this).classed("active", true);
+        })
+        .on("mouseout", function (d) {
+            tip.hide();
+            this.setAttribute("r", 3);
+            this.setAttribute("stroke-width", "1px");
+            d3.select(this).classed("active", true);
+        });
 }
 
 function makeUpDownAverageLineGraph (data, loc, selector) {
@@ -179,6 +196,8 @@ function makeUpDownAverageLineGraph (data, loc, selector) {
             .attr("transform", 
                   "translate(" + margin.left + "," + margin.top + ")");
 
+    svg.call(tip);
+
     // Add the valueline path.
     svg.append("path")
         .attr("class", "line")
@@ -210,7 +229,20 @@ function makeUpDownAverageLineGraph (data, loc, selector) {
       .attr("stroke", "#000")
       .attr("fill",function(d,i){
         return computeColor(d[loc], median, 1.5);
-      });
+      })
+        .on("mouseover", function(d) {
+            var date = dateToMonthDay(d.year)
+            tip.show(date[1] + ", " + date[0] + ": "  + d[loc]);
+            this.setAttribute("r", 5);
+            this.setAttribute("stroke-width", "2px");
+            d3.select(this).classed("active", true);
+        })
+        .on("mouseout", function (d) {
+            tip.hide();
+            this.setAttribute("r", 3);
+            this.setAttribute("stroke-width", "1px");
+            d3.select(this).classed("active", true);
+        });
 }
 
 function makeUpDownOverlapingLineGraph (data, loc, selector) {
@@ -253,6 +285,8 @@ function makeUpDownOverlapingLineGraph (data, loc, selector) {
             .attr("transform", 
                   "translate(" + margin.left + "," + margin.top + ")");
 
+    svg.call(tip);
+
     // Add the X Axis
     svg.append("g")
         .attr("class", "x axis")
@@ -293,7 +327,20 @@ function makeUpDownOverlapingLineGraph (data, loc, selector) {
       .attr("stroke", "#000")
       .attr("fill",function(d,i){
         return computeColor(d[loc], averages[i%46], 3);
-      });
+      })
+        .on("mouseover", function(d) {
+            var date = dateToMonthDay(d.year)
+            tip.show(date[1] + ", " + date[0] + ": "  + d[loc]);
+            this.setAttribute("r", 5);
+            this.setAttribute("stroke-width", "2px");
+            d3.select(this).classed("active", true);
+        })
+        .on("mouseout", function (d) {
+            tip.hide();
+            this.setAttribute("r", 3);
+            this.setAttribute("stroke-width", "1px");
+            d3.select(this).classed("active", true);
+        });
 }
 
 function drawUpDownPolar(data, loc, selector) {
@@ -332,6 +379,8 @@ function drawUpDownPolar(data, loc, selector) {
         .attr("height", height)
         .append("g")
         .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+
+    svg.call(tip);
 
     /**
      * This block of code draws the big circles of the graph & their labels
@@ -396,5 +445,18 @@ function drawUpDownPolar(data, loc, selector) {
       .attr("stroke", "#000")
       .attr("fill",function(d,i){
         return computeColor(d[loc], averages[i%46], 3);
-      });
+      })
+        .on("mouseover", function(d) {
+            var date = dateToMonthDay(d.year)
+            tip.show(date[1] + ", " + date[0] + ": "  + d[loc]);
+            this.setAttribute("r", 5);
+            this.setAttribute("stroke-width", "2px");
+            d3.select(this).classed("active", true);
+        })
+        .on("mouseout", function (d) {
+            tip.hide();
+            this.setAttribute("r", 3);
+            this.setAttribute("stroke-width", "1px");
+            d3.select(this).classed("active", true);
+        });
 }

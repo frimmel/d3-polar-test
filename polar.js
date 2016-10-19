@@ -30,6 +30,8 @@ var MONTH_LABELS = {
     11: "Dec"
 };
 
+var tip = d3.tip().attr('class', 'd3-tip').html(function (d) { return d; });
+
 function makeLineGraph (data, loc, selector) {
     // Set the dimensions of the canvas / graph
     var margin = {top: 30, right: 20, bottom: 30, left: 50},
@@ -67,6 +69,8 @@ function makeLineGraph (data, loc, selector) {
             .attr("transform", 
                   "translate(" + margin.left + "," + margin.top + ")");
 
+    svg.call(tip);
+
     // Add the valueline path.
     svg.append("path")
         .attr("class", "line")
@@ -98,7 +102,21 @@ function makeLineGraph (data, loc, selector) {
       .attr("stroke", "#000")
       .attr("fill",function(d,i){
         return "#" + colors.colourAt(i);
-      });
+      })
+        .on("mouseover", function(d) {
+            var date = dateToMonthDay(d.year)
+            tip.show(date[1] + ", " + date[0] + ": "  + d[loc]);
+            this.setAttribute("r", 5);
+            this.setAttribute("stroke-width", "2px");
+            d3.select(this).classed("active", true);
+        })
+        .on("mouseout", function (d) {
+            tip.hide();
+            this.setAttribute("r", 3);
+            this.setAttribute("stroke-width", "1px");
+            d3.select(this).classed("active", true);
+        });
+
 }
 
 function makeOverlapingLineGraph (data, loc, selector) {
@@ -142,6 +160,8 @@ function makeOverlapingLineGraph (data, loc, selector) {
             .attr("transform", 
                   "translate(" + margin.left + "," + margin.top + ")");
 
+    svg.call(tip)
+
     // Add the X Axis
     svg.append("g")
         .attr("class", "x axis")
@@ -182,15 +202,26 @@ function makeOverlapingLineGraph (data, loc, selector) {
       .attr("stroke", "#000")
       .attr("fill",function(d,i){
         return "#" + colors.colourAt(i);
-      });
+      })
+        .on("mouseover", function(d) {
+            var date = dateToMonthDay(d.year)
+            tip.show(date[1] + ", " + date[0] + ": "  + d[loc]);
+            this.setAttribute("r", 5);
+            this.setAttribute("stroke-width", "2px");
+            d3.select(this).classed("active", true);
+        })
+        .on("mouseout", function (d) {
+            tip.hide();
+            this.setAttribute("r", 3);
+            this.setAttribute("stroke-width", "1px");
+            d3.select(this).classed("active", true);
+        });
 }
 
 function drawPolar(data, loc, selector) {
     var width = 500,
         height = 500,
         radius = Math.min(width, height) / 2 - 30;
-
-    var tip = d3.tip().attr('class', 'd3-tip').html(function (d) { return d; });
 
     var colors = new Rainbow("#ff4e3d", "#1908ba");
     colors.setNumberRange(0, data.length - 1);
