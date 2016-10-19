@@ -50,7 +50,10 @@ function makeLineGraph (data, loc, selector) {
 
     // Define the axes
     var xAxis = d3.axisBottom(x)
-        .ticks(5);
+        .ticks(16)
+        .tickFormat(function (d) {
+            return Math.floor(parseInt(d, 10) / 356) + 2000;
+        });
     
     var yAxis = d3.axisLeft(y)
         .ticks(6);
