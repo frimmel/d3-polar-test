@@ -32,14 +32,77 @@ var MONTH_LABELS = {
 
 var tip = d3.tip().attr('class', 'd3-tip').html(function (d) { return d; });
 
-function makeLineGraph (data, loc, selector) {
+function processColorData (data, loc) {
+//    var loc_data = data[loc]
+    var averages = [];
+    var loc_averages;
+    var median;
+    var i, j;
+
+    for (i = 0; i < 46; i++) {
+        loc_averages = [];
+        for (j = i; j < data.length; j += 46) {
+            loc_averages.push(data[j][loc]);
+        }
+
+        median = loc_averages.sort()[Math.floor(loc_averages.length/2)];
+        averages.push(median);
+    }
+
+    return averages;
+}
+
+function computeColor (value, median, scale) {
+    var diff = value - median;
+    var percent_diff = (Math.abs(diff)/median) * 100 * scale;
+    var lightness = (100 - percent_diff) + "%";
+
+    if (diff > 0) {
+        return "hsl(8, 79%, " + lightness + ")";
+    } else {
+        return "hsl(219, 79%, " + lightness + ")";
+    }
+}
+
+/**
+ * takes the array of data and splits it up into subarrays keyed by year
+ */
+function reprocessData (data, averages, loc) {
+    var newData = {};
+    var avgPoint;
+    var key;
+    var i;
+
+    for (i = 0; i < data.length; i++) {
+        key = data[i].year.split(".")[0];
+        if (!newData[key]) {
+            newData[key] = [];
+        }
+        newData[key].push(data[i]);
+    }
+
+    newData["avg"] = [];
+    for (i = 0; i < averages.length; i++) {
+        avgPoint = {
+            "day": data[i]["day"],
+            "year": "Average"
+        };
+
+        avgPoint[loc] = averages[i];
+        newData["avg"].push(avgPoint);
+    }
+
+    return newData;
+}
+
+function makeUpDownLineGraph (data, loc, selector) {
+//    console.log(data)
     // Set the dimensions of the canvas / graph
     var margin = {top: 30, right: 20, bottom: 30, left: 50},
         width = 600 - margin.left - margin.right,
         height = 270 - margin.top - margin.bottom;
 
-    var colors = new Rainbow("#ff4e3d", "#1908ba");
-    colors.setNumberRange(0, data.length - 1);
+    var averages = processColorData(data, loc);
 
     // Set the ranges
     var x = d3.scaleLinear().range([0, width])
@@ -104,7 +167,7 @@ function makeLineGraph (data, loc, selector) {
       .attr("r", 3)
       .attr("stroke", "#000")
       .attr("fill",function(d,i){
-        return "#" + colors.colourAt(i);
+        return computeColor(d[loc], averages[i%46], 3);
       })
         .on("mouseover", function(d) {
             var date = dateToMonthDay(d.year)
@@ -119,18 +182,21 @@ function makeLineGraph (data, loc, selector) {
             this.setAttribute("stroke-width", "1px");
             d3.select(this).classed("active", true);
         });
-
 }
 
-function makeOverlapingLineGraph (data, loc, selector) {
+function makeUpDownOverlapingLineGraph (data, loc, selector, year) {
+    year = "2015";
+    console.log(year)
+
     // Set the dimensions of the canvas / graph
     var margin = {top: 30, right: 20, bottom: 30, left: 50},
         width = 600 - margin.left - margin.right,
         height = 270 - margin.top - margin.bottom;
 
-    var colors = new Rainbow("#ff4e3d", "#1908ba");
-    colors.setNumberRange(0, data.length - 1);
+    var averages = processColorData(data, loc);
 
+    var reprocessedData = reprocessData(data, averages, loc);
+console.log(reprocessedData)
     // Set the ranges
     var x = d3.scaleLinear().range([0, width])
         .domain([0, 365]);
@@ -163,7 +229,7 @@ function makeOverlapingLineGraph (data, loc, selector) {
             .attr("transform", 
                   "translate(" + margin.left + "," + margin.top + ")");
 
-    svg.call(tip)
+    svg.call(tip);
 
     // Add the X Axis
     svg.append("g")
@@ -177,23 +243,36 @@ function makeOverlapingLineGraph (data, loc, selector) {
         .call(yAxis);
 
     // Reprocess the data
-    var yeardata = [];
-    var index;
-    for (index = 0; index < data.length; index += 46) {
-      yeardata.push(data.slice(index, index+46));
-    }
+//    var yeardata = [];
+//    var index;
+//    for (index = 0; index < data.length; index += 46) {
+//      yeardata.push(data.slice(index, index+46));
+//    }
+
     // Add the valueline path.
-    svg.selectAll("svg")
-        .data(d3.range(0,yeardata.length,1))
-        .enter()
-        .append("path")
+//    svg.selectAll("svg")
+//        .data(d3.range(0,yeardata.length,1))
+//        .enter()
+    svg.append("path")
         .attr("class", "line")
-        .attr("d", function (d) { return valueline(yeardata[d]); });
+        .attr("d", valueline(reprocessedData["avg"]));
+
+    svg.append("path")
+        .attr("class", "line")
+        .attr("d", valueline(reprocessedData[year]));
+
+//    svg.selectAll("svg")
+//        .data(d3.range(0,yeardata.length,1))
+//        .enter()
+//        .append("path")
+//        .attr("class", "line")
+//        .attr("d", function (d) { return valueline(yeardata[5]); });
+
     /**
      * This block of code draws the point at each data point
      */
     svg.selectAll("point")
-      .data(data)
+      .data(reprocessedData["avg"])
       .enter()
       .append("circle")
       .attr("class", "point")
@@ -204,7 +283,35 @@ function makeOverlapingLineGraph (data, loc, selector) {
       .attr("r", 3)
       .attr("stroke", "#000")
       .attr("fill",function(d,i){
-        return "#" + colors.colourAt(i);
+        return computeColor(d[loc], averages[i%46], 3);
+      })
+        .on("mouseover", function(d) {
+            var date = dateToMonthDay(d.year)
+            tip.show(date + ": "  + d[loc]);
+            this.setAttribute("r", 5);
+            this.setAttribute("stroke-width", "2px");
+            d3.select(this).classed("active", true);
+        })
+        .on("mouseout", function (d) {
+            tip.hide();
+            this.setAttribute("r", 3);
+            this.setAttribute("stroke-width", "1px");
+            d3.select(this).classed("active", true);
+        });
+
+    svg.selectAll("point")
+      .data(reprocessedData[year])
+      .enter()
+      .append("circle")
+      .attr("class", "point")
+      .attr("transform", function(d) {
+        var coors = valueline([d]).slice(1).slice(0, -1);
+        return "translate(" + coors + ")"
+      })
+      .attr("r", 3)
+      .attr("stroke", "#000")
+      .attr("fill",function(d,i){
+        return computeColor(d[loc], averages[i%46], 3);
       })
         .on("mouseover", function(d) {
             var date = dateToMonthDay(d.year)
@@ -221,13 +328,12 @@ function makeOverlapingLineGraph (data, loc, selector) {
         });
 }
 
-function drawPolar(data, loc, selector) {
+function drawUpDownPolar(data, loc, selector) {
     var width = 500,
         height = 500,
         radius = Math.min(width, height) / 2 - 30;
 
-    var colors = new Rainbow("#ff4e3d", "#1908ba");
-    colors.setNumberRange(0, data.length - 1);
+    var averages = processColorData(data, loc);
 
     /**
      * Sets up scaling of data. We know that the ndvi values fall between
@@ -253,16 +359,13 @@ function drawPolar(data, loc, selector) {
     /**
      * Sets up the canvas where the circle will be drawn.
      */
-    var wrapper = d3.select(selector).append("div")
-        .classed("graph-wrapper", true);
-
-    var svg = wrapper.append("svg")
+    var svg = d3.select(selector).append("svg")
         .attr("width", width)
         .attr("height", height)
         .append("g")
         .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
 
-    svg.call(tip)
+    svg.call(tip);
 
     /**
      * This block of code draws the big circles of the graph & their labels
@@ -311,30 +414,23 @@ function drawPolar(data, loc, selector) {
         .attr("class", "line")
         .attr("d", line);
 
-    // Define the div for the tooltip
-    var div = wrapper.append("div")
-        .attr("class", "tooltip")
-        .style("opacity", 0);
-
     /**
      * This block of code draws the point at each data point
      */
     svg.selectAll("point")
-        .data(data)
-        .enter()
-        .append("circle")
-        .attr("class", "point")
-        .attr("cx", function(d) {
-            return line([d]).split(",")[0].slice(1);
-        })
-        .attr("cy", function(d) {
-            return line([d]).split(",")[1].slice(0, -1);
-        })
-        .attr("r", 3)
-        .attr("stroke", "#000")
-        .attr("fill",function(d,i){
-            return "#" + colors.colourAt(i);
-        })
+      .data(data)
+      .enter()
+      .append("circle")
+      .attr("class", "point")
+      .attr("transform", function(d) {
+        var coors = line([d]).slice(1).slice(0, -1);
+        return "translate(" + coors + ")"
+      })
+      .attr("r", 3)
+      .attr("stroke", "#000")
+      .attr("fill",function(d,i){
+        return computeColor(d[loc], averages[i%46], 3);
+      })
         .on("mouseover", function(d) {
             var date = dateToMonthDay(d.year)
             tip.show(date[1] + ", " + date[0] + ": "  + d[loc]);
@@ -348,69 +444,4 @@ function drawPolar(data, loc, selector) {
             this.setAttribute("stroke-width", "1px");
             d3.select(this).classed("active", true);
         });
-}
-
-function dateToMonthDay (date) {
-    if (date === "Average") return date;
-
-    date = date.split(".");
-    var leapYearCounter = (parseInt(date[0], 10) % 4) ? 0 : 1;
-
-    var day = Math.floor(parseFloat("." + date[1]) * (365 + leapYearCounter));
-
-    var jan = 31;
-    var feb = jan + 28 + leapYearCounter;
-    var mar = feb + 31;
-    var apr = mar + 30;
-    var may = apr + 31;
-    var jun = may + 30;
-    var jul = jun + 31;
-    var aug = jul + 31;
-    var sep = aug + 30;
-    var oct = sep + 31;
-    var nov = oct + 30;
-    var dec = nov + 31;
-
-    if (day < jan) {
-        date[1] = "Jan. " + ordinal_suffix_of(day);
-    } else if (day < feb) {
-        date[1] = "Feb. " + ordinal_suffix_of(day - jan);
-    } else if (day < mar) {
-        date[1] = "Mar. " + ordinal_suffix_of(day - feb);
-    } else if (day < apr) {
-        date[1] = "Apr. " + ordinal_suffix_of(day - mar);
-    } else if (day < may) {
-        date[1] = "May. " + ordinal_suffix_of(day - apr);
-    } else if (day < jun) {
-        date[1] = "Jun. " + ordinal_suffix_of(day - may);
-    } else if (day < jul) {
-        date[1] = "Jul. " + ordinal_suffix_of(day - jun);
-    } else if (day < aug) {
-        date[1] = "Aug. " + ordinal_suffix_of(day - jul);
-    } else if (day < sep) {
-        date[1] = "Sep. " + ordinal_suffix_of(day - aug);
-    } else if (day < oct) {
-        date[1] = "Oct. " + ordinal_suffix_of(day - sep);
-    } else if (day < nov) {
-        date[1] = "Nov. " + ordinal_suffix_of(day - oct);
-    } else if (day < dec) {
-        date[1] = "Dec. " + ordinal_suffix_of(day - nov);
-    }
-
-    return date;
-}
-
-function ordinal_suffix_of(i) {
-    var j = i % 10,
-        k = i % 100;
-    if (j == 1 && k != 11) {
-        return i + "st";
-    }
-    if (j == 2 && k != 12) {
-        return i + "nd";
-    }
-    if (j == 3 && k != 13) {
-        return i + "rd";
-    }
-    return i + "th";
 }
