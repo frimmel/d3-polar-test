@@ -73,9 +73,12 @@ function reprocessData (data, averages, loc) {
     var key;
     var i;
 
+
+    newData["keys"] = [];
     for (i = 0; i < data.length; i++) {
         key = data[i].year.split(".")[0];
         if (!newData[key]) {
+            newData.keys.push(key);
             newData[key] = [];
         }
         newData[key].push(data[i]);
@@ -92,6 +95,7 @@ function reprocessData (data, averages, loc) {
         newData["avg"].push(avgPoint);
     }
 
+    console.log(newData)
     return newData;
 }
 
@@ -186,7 +190,6 @@ function makeUpDownLineGraph (data, loc, selector) {
 
 function makeUpDownOverlapingLineGraph (data, loc, selector, year) {
     year = "2015";
-    console.log(year)
 
     // Set the dimensions of the canvas / graph
     var margin = {top: 30, right: 20, bottom: 30, left: 50},
@@ -196,7 +199,6 @@ function makeUpDownOverlapingLineGraph (data, loc, selector, year) {
     var averages = processColorData(data, loc);
 
     var reprocessedData = reprocessData(data, averages, loc);
-console.log(reprocessedData)
     // Set the ranges
     var x = d3.scaleLinear().range([0, width])
         .domain([0, 365]);
@@ -219,9 +221,11 @@ console.log(reprocessedData)
     var valueline = d3.line()
         .x(function(d) { return x((d.day%365)); })
         .y(function(d) { return y(d[loc]); });
+
+    var wrapper = d3.select(selector).append("div");
     
     // Adds the svg canvas
-    var svg = d3.select(selector)
+    var svg = wrapper
         .append("svg")
             .attr("width", width + margin.left + margin.right)
             .attr("height", height + margin.top + margin.bottom)
@@ -257,7 +261,7 @@ console.log(reprocessedData)
         .attr("class", "line")
         .attr("d", valueline(reprocessedData["avg"]));
 
-    svg.append("path")
+    var chartLine = svg.append("path")
         .attr("class", "line")
         .attr("d", valueline(reprocessedData[year]));
 
@@ -299,7 +303,7 @@ console.log(reprocessedData)
             d3.select(this).classed("active", true);
         });
 
-    svg.selectAll("point")
+    var charts = svg.selectAll("point")
       .data(reprocessedData[year])
       .enter()
       .append("circle")
@@ -326,6 +330,56 @@ console.log(reprocessedData)
             this.setAttribute("stroke-width", "1px");
             d3.select(this).classed("active", true);
         });
+
+    var inputwrapper = wrapper.append("div").classed("input-wrapper", true);
+
+    inputwrapper.append("input")
+        .attr("type", "range")
+        .attr("min", reprocessedData.keys[0])
+        .attr("max", reprocessedData.keys[reprocessedData.keys.length - 1])
+        .attr("value", year)
+        .attr("step", 1)
+        .on("input", function (e) {
+            charts.remove();
+            chartLine.remove();
+            var newYear = this.value;
+
+            chartLine = svg.append("path")
+                .attr("class", "line")
+                .attr("d", valueline(reprocessedData[newYear]));
+
+            charts = svg.selectAll("point")
+                .data(reprocessedData[newYear])
+                .enter()
+                .append("circle")
+                .attr("class", "point")
+                .attr("transform", function(d) {
+                    var coors = valueline([d]).slice(1).slice(0, -1);
+                    return "translate(" + coors + ")"
+                })
+                .attr("r", 3)
+                .attr("stroke", "#000")
+                .attr("fill",function(d,i){
+                    return computeColor(d[loc], averages[i%46], 3);
+                })
+                .on("mouseover", function(d) {
+                    var date = dateToMonthDay(d.year)
+                    tip.show(date[1] + ", " + date[0] + ": "  + d[loc]);
+                    this.setAttribute("r", 5);
+                    this.setAttribute("stroke-width", "2px");
+                    d3.select(this).classed("active", true);
+                })
+                .on("mouseout", function (d) {
+                    tip.hide();
+                    this.setAttribute("r", 3);
+                    this.setAttribute("stroke-width", "1px");
+                    d3.select(this).classed("active", true);
+                });
+        })
+
+    reprocessedData.keys.forEach(function (key) {
+        inputwrapper.append("span").text(key).classed("range-label", true);
+    });
 }
 
 function drawUpDownPolar(data, loc, selector) {
