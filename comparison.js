@@ -284,7 +284,7 @@ function makeUpDownOverlapingLineGraph (data, loc, selector, year) {
         var coors = valueline([d]).slice(1).slice(0, -1);
         return "translate(" + coors + ")"
       })
-      .attr("r", 3)
+      .attr("r", 2.5)
       .attr("stroke", "#000")
       .attr("fill",function(d,i){
         return computeColor(d[loc], averages[i%46], 3);
@@ -298,7 +298,7 @@ function makeUpDownOverlapingLineGraph (data, loc, selector, year) {
         })
         .on("mouseout", function (d) {
             tip.hide();
-            this.setAttribute("r", 3);
+            this.setAttribute("r", 2.5);
             this.setAttribute("stroke-width", "1px");
             d3.select(this).classed("active", true);
         });
@@ -388,6 +388,7 @@ function drawUpDownPolar(data, loc, selector) {
         radius = Math.min(width, height) / 2 - 30;
 
     var averages = processColorData(data, loc);
+    var reprocessedData = reprocessData(data, averages, loc);
 
     /**
      * Sets up scaling of data. We know that the ndvi values fall between
@@ -413,7 +414,8 @@ function drawUpDownPolar(data, loc, selector) {
     /**
      * Sets up the canvas where the circle will be drawn.
      */
-    var svg = d3.select(selector).append("svg")
+    var wrapper = d3.select(selector).append("div");
+    var svg = wrapper.append("svg")
         .attr("width", width)
         .attr("height", height)
         .append("g")
@@ -464,7 +466,12 @@ function drawUpDownPolar(data, loc, selector) {
      * This block of code draws the line that the data follows
      */
     svg.append("path")
-        .datum(data)
+        .datum(reprocessedData["avg"])
+        .attr("class", "line")
+        .attr("d", line);
+
+    var chartLine = svg.append("path")
+        .datum(reprocessedData["2015"])
         .attr("class", "line")
         .attr("d", line);
 
@@ -472,7 +479,35 @@ function drawUpDownPolar(data, loc, selector) {
      * This block of code draws the point at each data point
      */
     svg.selectAll("point")
-      .data(data)
+      .data(reprocessedData["avg"])
+      .enter()
+      .append("circle")
+      .attr("class", "point")
+      .attr("transform", function(d) {
+        var coors = line([d]).slice(1).slice(0, -1);
+        return "translate(" + coors + ")"
+      })
+      .attr("r", 2.5)
+      .attr("stroke", "#000")
+      .attr("fill",function(d,i){
+        return computeColor(d[loc], averages[i%46], 3);
+      })
+        .on("mouseover", function(d) {
+            var date = dateToMonthDay(d.year)
+            tip.show(date + ": "  + d[loc]);
+            this.setAttribute("r", 5);
+            this.setAttribute("stroke-width", "2px");
+            d3.select(this).classed("active", true);
+        })
+        .on("mouseout", function (d) {
+            tip.hide();
+            this.setAttribute("r", 2.5);
+            this.setAttribute("stroke-width", "1px");
+            d3.select(this).classed("active", true);
+        });
+
+    var charts = svg.selectAll("point")
+      .data(reprocessedData["2015"])
       .enter()
       .append("circle")
       .attr("class", "point")
@@ -498,4 +533,56 @@ function drawUpDownPolar(data, loc, selector) {
             this.setAttribute("stroke-width", "1px");
             d3.select(this).classed("active", true);
         });
+
+    var inputwrapper = wrapper.append("div").classed("input-wrapper", true);
+
+    inputwrapper.append("input")
+        .attr("type", "range")
+        .attr("min", reprocessedData.keys[0])
+        .attr("max", reprocessedData.keys[reprocessedData.keys.length - 1])
+        .attr("value", "2015")
+        .attr("step", 1)
+        .on("input", function (e) {
+            charts.remove();
+            chartLine.remove();
+            var newYear = this.value;
+
+            chartLine = svg.append("path")
+                .datum(reprocessedData[newYear])
+                .attr("class", "line")
+                .attr("d", line);
+
+            charts = svg.selectAll("point")
+                .data(reprocessedData[newYear])
+                .enter()
+                .append("circle")
+                .attr("class", "point")
+                .attr("transform", function(d) {
+                    var coors = line([d]).slice(1).slice(0, -1);
+                    return "translate(" + coors + ")"
+                })
+                .attr("r", 3)
+                .attr("stroke", "#000")
+                .attr("fill",function(d,i){
+                    return computeColor(d[loc], averages[i%46], 3);
+                })
+                .on("mouseover", function(d) {
+                    var date = dateToMonthDay(d.year)
+                    tip.show(date[1] + ", " + date[0] + ": "  + d[loc]);
+                    this.setAttribute("r", 5);
+                    this.setAttribute("stroke-width", "2px");
+                    d3.select(this).classed("active", true);
+                })
+                .on("mouseout", function (d) {
+                    tip.hide();
+                    this.setAttribute("r", 3);
+                    this.setAttribute("stroke-width", "1px");
+                    d3.select(this).classed("active", true);
+                });
+        })
+
+    reprocessedData.keys.forEach(function (key) {
+        inputwrapper.append("span").text(key).classed("range-label", true);
+    });
+
 }
