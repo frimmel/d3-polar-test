@@ -68,6 +68,7 @@ function computeColor (value, median, scale) {
  * takes the array of data and splits it up into subarrays keyed by year
  */
 function reprocessData (data, averages, loc) {
+    console.log(data)
     var newData = {};
     var avgPoint;
     var key;
@@ -97,6 +98,70 @@ function reprocessData (data, averages, loc) {
 
     console.log(newData)
     return newData;
+}
+
+function findPolarCenter (data, loc) {
+    var i, j, length, arr;
+    var totalSum = 0;
+    var sum;
+    length = 46;
+    
+
+    for (i = 0; i < data.keys.length; i++) {
+        arr = data[data.keys[i]];
+        sum = 0;
+        for (j = 0; j < length/2; j++) {
+            sum += (arr[j][loc] - arr[j+23][loc]);
+        }
+        sum = sum / 23;
+        totalSum += sum;
+    }
+    totalSum = Math.abs(totalSum) / data.keys.length;
+
+    var areaDiff = 1000000;
+    var checkDiff;
+    var areaIndex = 0;
+    var leftArea, rightArea;
+    var avgs = data.avg;
+    var k, counter;
+
+    for (i = 0; i < length/2; i++) {
+        leftArea = 0;
+        rightArea = 0;
+        for (counter = 0; counter < length/2; counter++) {
+            j = (i + counter) % 46;
+            k = (j + 23) % 46;
+
+            leftArea += avgs[j][loc];
+            rightArea += avgs[k][loc];
+        }
+        checkDiff = Math.abs(leftArea - rightArea);
+        if (checkDiff < areaDiff) {
+            areaDiff = checkDiff;
+            areaIndex = i;
+        }
+    }
+
+    var firstRadius = avgs[areaIndex][loc];
+    var secondRadius = -avgs[areaIndex + 23][loc];
+
+    var firstDiff = Math.abs(totalSum - firstRadius) - Math.abs(totalSum - secondRadius);
+    var secondDiff = Math.abs(-totalSum - firstRadius) - Math.abs(-totalSum - secondRadius);
+    if (secondDiff > firstDiff) {
+        areaIndex = areaIndex + 23;
+    }
+
+    var circlecenter = {
+        "day" : 0
+    };
+    circlecenter[loc] = 0;
+
+    var datacenter = {
+        "day" : avgs[areaIndex].day
+    };
+    datacenter[loc] = totalSum;
+
+    return([circlecenter, datacenter]);
 }
 
 function makeUpDownLineGraph (data, loc, selector) {
@@ -389,6 +454,7 @@ function drawUpDownPolar(data, loc, selector) {
 
     var averages = processColorData(data, loc);
     var reprocessedData = reprocessData(data, averages, loc);
+    var center = findPolarCenter(reprocessedData, loc);
 
     /**
      * Sets up scaling of data. We know that the ndvi values fall between
@@ -462,6 +528,59 @@ function drawUpDownPolar(data, loc, selector) {
         .attr("transform", function(d) { return d < 360 && d > 180 ? "rotate(180 " + (radius + 6) + ",0)" : null; })
         .text(function(d) { return MONTH_LABELS[d/30]; });
 
+    /**
+     * Draws the line to the center of the data
+     */
+    var centerDay = center[1].day;
+    var centerDayOpposite = (centerDay + (365/2)) % 365;
+    var centerDayData = {
+        "day": centerDay
+    };
+    centerDayData[loc] = 100;
+    var centerDayOppositeData = {
+        "day": centerDayOpposite
+    };
+    centerDayOppositeData[loc] = 100;
+    var growingSeasonData = [centerDayData, centerDayOppositeData]
+    console.log(growingSeasonData)
+
+    svg.append("path")
+        .datum(growingSeasonData)
+        .attr("class", "line")
+        .attr("d", line)
+        .classed("growing-season-line", "true");
+
+    svg.append("path")
+        .datum(center)
+        .attr("class", "line")
+        .attr("d", line)
+        .classed("center-line", "true");
+
+    svg.selectAll("point")
+        .data([center[1]])
+        .enter()
+        .append("circle")
+        .attr("class", "point")
+        .attr("transform", function(d) {
+            var coors = line([d]).slice(1).slice(0, -1);
+            return "translate(" + coors + ")"
+        })
+        .attr("r", 2.5)
+        .attr("stroke", "#000")
+        .attr("fill", "#dd82d2")
+        .on("mouseover", function(d) {
+            tip.show("Center: "  + String(d[loc]).substring(0, 7));
+            this.setAttribute("r", 5);
+            this.setAttribute("stroke-width", "2px");
+            d3.select(this).classed("active", true);
+        })
+        .on("mouseout", function (d) {
+            tip.hide();
+            this.setAttribute("r", 2.5);
+            this.setAttribute("stroke-width", "1px");
+            d3.select(this).classed("active", true);
+        });
+    
     /**
      * This block of code draws the line that the data follows
      */
