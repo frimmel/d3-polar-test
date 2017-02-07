@@ -376,36 +376,42 @@ function drawUpDownPolarWithCheckboxes (data, loc, selector) {
             d3.select(this).classed("active", true);
         });
     
+    var charts = {};
+
     /**
      * This block of code draws the line that the data follows
      */
-    svg.append("path")
-        .datum(reprocessedData["avg"])
-        .attr("class", "line")
-        .attr("d", line);
+    charts["avg"] = {
+        "path" : svg.append("path")
+            .datum(reprocessedData["avg"])
+            .attr("class", "line")
+            .attr("d", line)
+    };
 
-    var chartLine = svg.append("path")
-        .datum(reprocessedData["2015"])
-        .attr("class", "line")
-        .attr("d", line);
+    charts["2015"] = {
+        "path" : svg.append("path")
+            .datum(reprocessedData["2015"])
+            .attr("class", "line")
+            .attr("d", line)
+    };
 
     /**
      * This block of code draws the point at each data point
      */
-    svg.selectAll("point")
-      .data(reprocessedData["avg"])
-      .enter()
-      .append("circle")
-      .attr("class", "point")
-      .attr("transform", function(d) {
-        var coors = line([d]).slice(1).slice(0, -1);
-        return "translate(" + coors + ")"
-      })
-      .attr("r", 2.5)
-      .attr("stroke", "#000")
-      .attr("fill",function(d,i){
-        return computeColor(d[loc], averages[i%46], 3);
-      })
+    charts.avg.points = svg.selectAll("point")
+        .data(reprocessedData["avg"])
+        .enter()
+        .append("circle")
+        .attr("class", "point")
+        .attr("transform", function(d) {
+            var coors = line([d]).slice(1).slice(0, -1);
+            return "translate(" + coors + ")"
+        })
+        .attr("r", 2.5)
+        .attr("stroke", "#000")
+        .attr("fill",function(d,i){
+            return computeColor(d[loc], averages[i%46], 3);
+        })
         .on("mouseover", function(d) {
             var date = dateToMonthDay(d.year)
             tip.show(date + ": "  + d[loc]);
@@ -420,20 +426,20 @@ function drawUpDownPolarWithCheckboxes (data, loc, selector) {
             d3.select(this).classed("active", true);
         });
 
-    var charts = svg.selectAll("point")
-      .data(reprocessedData["2015"])
-      .enter()
-      .append("circle")
-      .attr("class", "point")
-      .attr("transform", function(d) {
-        var coors = line([d]).slice(1).slice(0, -1);
-        return "translate(" + coors + ")"
-      })
-      .attr("r", 3)
-      .attr("stroke", "#000")
-      .attr("fill",function(d,i){
-        return computeColor(d[loc], averages[i%46], 3);
-      })
+    charts["2015"].points = svg.selectAll("point")
+        .data(reprocessedData["2015"])
+        .enter()
+        .append("circle")
+        .attr("class", "point")
+        .attr("transform", function(d) {
+            var coors = line([d]).slice(1).slice(0, -1);
+            return "translate(" + coors + ")"
+        })
+        .attr("r", 3)
+        .attr("stroke", "#000")
+        .attr("fill",function(d,i){
+            return computeColor(d[loc], averages[i%46], 3);
+        })
         .on("mouseover", function(d) {
             var date = dateToMonthDay(d.year)
             tip.show(date[1] + ", " + date[0] + ": "  + d[loc]);
@@ -450,53 +456,117 @@ function drawUpDownPolarWithCheckboxes (data, loc, selector) {
 
     var inputwrapper = wrapper.append("div").classed("input-wrapper", true);
 
-    inputwrapper.append("input")
-        .attr("type", "range")
-        .attr("min", reprocessedData.keys[0])
-        .attr("max", reprocessedData.keys[reprocessedData.keys.length - 1])
-        .attr("value", "2015")
-        .attr("step", 1)
-        .on("input", function (e) {
-            charts.remove();
-            chartLine.remove();
-            var newYear = this.value;
-
-            chartLine = svg.append("path")
-                .datum(reprocessedData[newYear])
-                .attr("class", "line")
-                .attr("d", line);
-
-            charts = svg.selectAll("point")
-                .data(reprocessedData[newYear])
-                .enter()
-                .append("circle")
-                .attr("class", "point")
-                .attr("transform", function(d) {
-                    var coors = line([d]).slice(1).slice(0, -1);
-                    return "translate(" + coors + ")"
-                })
-                .attr("r", 3)
-                .attr("stroke", "#000")
-                .attr("fill",function(d,i){
-                    return computeColor(d[loc], averages[i%46], 3);
-                })
-                .on("mouseover", function(d) {
-                    var date = dateToMonthDay(d.year)
-                    tip.show(date[1] + ", " + date[0] + ": "  + d[loc]);
-                    this.setAttribute("r", 5);
-                    this.setAttribute("stroke-width", "2px");
-                    d3.select(this).classed("active", true);
-                })
-                .on("mouseout", function (d) {
-                    tip.hide();
-                    this.setAttribute("r", 3);
-                    this.setAttribute("stroke-width", "1px");
-                    d3.select(this).classed("active", true);
-                });
-        })
-
     reprocessedData.keys.forEach(function (key) {
-        inputwrapper.append("span").text(key).classed("range-label", true);
+        var checkboxWrapper = inputwrapper.append("div");
+
+        checkboxWrapper.append("input")
+            .attr("type", "checkbox")
+            .attr("id", "polar-" + key)
+            .attr("value", key)
+            .property("checked", (key === "2015") ? true : false)
+            .on("change", function (e) {
+                var newYear = this.value;
+                if (!this.checked) {
+                    charts[newYear].path.remove();
+                    charts[newYear].points.remove();
+                } else {
+                    if (!charts.hasOwnProperty(newYear)) {
+                        charts[newYear] = {};
+                    }
+
+                    charts[newYear].path = svg.append("path")
+                        .datum(reprocessedData[newYear])
+                        .attr("class", "line")
+                        .attr("d", line);
+
+                    charts[newYear].points = svg.selectAll("point")
+                        .data(reprocessedData[newYear])
+                        .enter()
+                        .append("circle")
+                        .attr("class", "point")
+                        .attr("transform", function(d) {
+                            var coors = line([d]).slice(1).slice(0, -1);
+                            return "translate(" + coors + ")"
+                        })
+                        .attr("r", 3)
+                        .attr("stroke", "#000")
+                        .attr("fill",function(d,i){
+                            return computeColor(d[loc], averages[i%46], 3);
+                        })
+                        .on("mouseover", function(d) {
+                            var date = dateToMonthDay(d.year)
+                            tip.show(date[1] + ", " + date[0] + ": "  + d[loc]);
+                            this.setAttribute("r", 5);
+                            this.setAttribute("stroke-width", "2px");
+                            d3.select(this).classed("active", true);
+                        })
+                        .on("mouseout", function (d) {
+                            tip.hide();
+                            this.setAttribute("r", 3);
+                            this.setAttribute("stroke-width", "1px");
+                            d3.select(this).classed("active", true);
+                        });
+                }
+            });
+
+        checkboxWrapper.append("label")
+            .text(key)
+            .attr("for", "polar-" + key);
     });
 
+    var checkboxWrapper = inputwrapper.append("div");
+
+    checkboxWrapper.append("input")
+        .attr("type", "checkbox")
+        .attr("id", "polar-average")
+        .attr("value", "avg")
+        .property("checked", true)
+        .on("change", function (e) {
+            var newYear = this.value;
+            if (!this.checked) {
+                charts[newYear].path.remove();
+                charts[newYear].points.remove();
+            } else {
+                if (!charts.hasOwnProperty(newYear)) {
+                    charts[newYear] = {};
+                }
+
+                charts.avg.path = svg.append("path")
+                    .datum(reprocessedData["avg"])
+                    .attr("class", "line")
+                    .attr("d", line)
+
+                charts.avg.points = svg.selectAll("point")
+                    .data(reprocessedData["avg"])
+                    .enter()
+                    .append("circle")
+                    .attr("class", "point")
+                    .attr("transform", function(d) {
+                        var coors = line([d]).slice(1).slice(0, -1);
+                        return "translate(" + coors + ")"
+                    })
+                    .attr("r", 2.5)
+                    .attr("stroke", "#000")
+                    .attr("fill",function(d,i){
+                        return computeColor(d[loc], averages[i%46], 3);
+                    })
+                    .on("mouseover", function(d) {
+                        var date = dateToMonthDay(d.year)
+                        tip.show(date + ": "  + d[loc]);
+                        this.setAttribute("r", 5);
+                        this.setAttribute("stroke-width", "2px");
+                        d3.select(this).classed("active", true);
+                    })
+                    .on("mouseout", function (d) {
+                        tip.hide();
+                        this.setAttribute("r", 2.5);
+                        this.setAttribute("stroke-width", "1px");
+                        d3.select(this).classed("active", true);
+                    });
+            }
+        });
+
+    checkboxWrapper.append("label")
+        .text("Average")
+        .attr("for", "polar-average");
 }
