@@ -128,14 +128,16 @@
             padding-right: 2.1%;
         }
 
-        #all-data-periodic-checkboxes .input-wrapper {
+        #all-data-periodic-checkboxes .input-wrapper, #all-data-periodic-threshold .input-wrapper {
         display: inline-block;
         padding-left: 15px;
         vertical-align: top;
         }
 
         #all-data-periodic-checkboxes input,
-        #all-data-periodic-checkboxes label {
+        #all-data-periodic-checkboxes label,
+        #all-data-periodic-threshold input,
+        #all-data-periodic-threshold label {
         cursor: pointer;
         }
 
@@ -162,6 +164,12 @@
             top: -50%;
         }
 
+        .threshold-checkbox {
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px solid #ccc;
+        }
+
     </style>
   </head>
   <body>
@@ -182,6 +190,7 @@
     </div>
     <div id="all-data-periodic"></div>
     <div id="all-data-periodic-checkboxes"></div>
+    <div id="all-data-periodic-threshold"></div>
     <div id="all-data-timescale"></div>
     <div id="all-data-median"></div>
     <div id="year-data"></div>
@@ -191,6 +200,7 @@
 
     <script src="comparison.js"></script>
     <script src="comparison-checkboxes.js"></script>
+    <script src="comparison-checkboxes-threshold.js"></script>
     <script src="median-colorswap.js"></script>
     <script>
         function drawGraphs(loc) {
@@ -226,6 +236,14 @@
                         .append("div")
                         .attr("id", "all-data-periodic-checkboxes-polar")
                         .classed("all-graph-wrapper", true);
+                    d3.select("#all-data-periodic-threshold")
+                        .html("")
+                        .append("h3")
+                        .text("Allows users to toggle thresholds on and off. Colors show the difference from the median of each 8 day period (uses checkboxes)");
+                    d3.select("#all-data-periodic-threshold")
+                        .append("div")
+                        .attr("id", "all-data-periodic-threshold-polar")
+                        .classed("all-graph-wrapper", true);
                     d3.select("#all-data-timescale")
                         .html("")
                         .append("h3")
@@ -245,6 +263,8 @@
 
                     makeUpDownOverlapingLineGraphWithCheckboxes(data, loc, "#all-data-periodic-checkboxes-timeseries");
                     drawUpDownPolarWithCheckboxes(data, loc, "#all-data-periodic-checkboxes-polar");
+
+                    drawUpDownPolarWithCheckboxesAndThresholds(data, loc, "#all-data-periodic-threshold-polar");
 
                     makeUpDownAverageOverlapingLineGraph(data, loc, "#all-data-median");
                     makeUpDownAverageLineGraph(data, loc, "#all-data-median");
