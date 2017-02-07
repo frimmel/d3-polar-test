@@ -118,11 +118,11 @@
           position: relative;
         }
 
-        #all-data-periodic > div {
+        #all-data-periodic > div, #all-data-periodic-checkboxes > div {
             display: inline-block;
         }
 
-        #all-data-periodic input[type=range] {
+        #all-data-periodic input[type=range], #all-data-periodic-checkboxes input[type=range] {
             width: 100%;
             padding-left: 10px;
             padding-right: 2.1%;
@@ -169,8 +169,9 @@
     <div id="all-data">
       <h2>Full data</h2>
     </div>
-    <div id="all-data-timescale"></div>
     <div id="all-data-periodic"></div>
+    <div id="all-data-periodic-checkboxes"></div>
+    <div id="all-data-timescale"></div>
     <div id="all-data-median"></div>
     <div id="year-data"></div>
 
@@ -178,6 +179,7 @@
 <!--    <script src="colorswap.js"></script>-->
 
     <script src="comparison.js"></script>
+    <script src="comparison-checkboxes.js"></script>
     <script src="median-colorswap.js"></script>
     <script>
         function drawGraphs(loc) {
@@ -185,14 +187,18 @@
                 .mimeType("text/csv")
                 .response(function (xhr) { return d3.csvParseRows(xhr.responseText, parseRow)})
                 .get(function (data) {
+                    d3.select("#all-data-periodic")
+                        .html("")
+                        .append("h3")
+                        .text("Colors show the difference from the median of each 8 day period (uses sliders)");
+                    d3.select("#all-data-periodic-checkboxes")
+                        .html("")
+                        .append("h3")
+                        .text("Colors show the difference from the median of each 8 day period (uses checkboxes)");
                     d3.select("#all-data-timescale")
                         .html("")
                         .append("h3")
                         .text("Colors change based on time");
-                    d3.select("#all-data-periodic")
-                        .html("")
-                        .append("h3")
-                        .text("Colors show the difference from the median of each 8 day period");
                     d3.select("#all-data-median")
                         .html("")
                         .append("h3")
@@ -200,9 +206,14 @@
                     makeOverlapingLineGraph(data, loc, "#all-data-timescale");
                     makeLineGraph(data, loc, "#all-data-timescale");
                     drawPolar(data, loc, "#all-data-timescale");
+
                     makeUpDownOverlapingLineGraph(data, loc, "#all-data-periodic");
                     makeUpDownLineGraph(data, loc, "#all-data-periodic");
                     drawUpDownPolar(data, loc, "#all-data-periodic");
+
+                    makeUpDownOverlapingLineGraphWithCheckboxes(data, loc, "#all-data-periodic-checkboxes");
+                    drawUpDownPolarWithCheckboxes(data, loc, "#all-data-periodic-checkboxes");
+
                     makeUpDownAverageOverlapingLineGraph(data, loc, "#all-data-median");
                     makeUpDownAverageLineGraph(data, loc, "#all-data-median");
                     drawUpDownAveragePolar(data, loc, "#all-data-median");
