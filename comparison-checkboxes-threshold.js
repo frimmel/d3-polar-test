@@ -437,7 +437,7 @@ function drawUpDownPolarWithCheckboxesAndThresholds (data, loc, selector) {
         });
 
     checkboxWrapper.append("label")
-        .text("Average")
+        .text("Baseline")
         .attr("for", "polar-average-threshold");
 
     var thresholdCheckbox= inputwrapper.append("div")
