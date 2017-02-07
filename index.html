@@ -118,14 +118,25 @@
           position: relative;
         }
 
-        #all-data-periodic > div, #all-data-periodic-checkboxes > div {
+        .all-graph-wrapper > div {
             display: inline-block;
         }
 
-        #all-data-periodic input[type=range], #all-data-periodic-checkboxes input[type=range] {
+        #all-data-periodic input[type=range] {
             width: 100%;
             padding-left: 10px;
             padding-right: 2.1%;
+        }
+
+        #all-data-periodic-checkboxes .input-wrapper {
+        display: inline-block;
+        padding-left: 15px;
+        vertical-align: top;
+        }
+
+        #all-data-periodic-checkboxes input,
+        #all-data-periodic-checkboxes label {
+        cursor: pointer;
         }
 
         .input-wrapper {
@@ -191,10 +202,30 @@
                         .html("")
                         .append("h3")
                         .text("Colors show the difference from the median of each 8 day period (uses sliders)");
+                    d3.select("#all-data-periodic")
+                        .append("div")
+                        .attr("id", "all-data-periodic-timeseries")
+                        .classed("all-graph-wrapper", true);
+                    d3.select("#all-data-periodic")
+                        .append("div")
+                        .attr("id", "all-data-periodic-timeseries-all")
+                        .classed("all-graph-wrapper", true);
+                    d3.select("#all-data-periodic")
+                        .append("div")
+                        .attr("id", "all-data-periodic-polar")
+                        .classed("all-graph-wrapper", true);
                     d3.select("#all-data-periodic-checkboxes")
                         .html("")
                         .append("h3")
                         .text("Colors show the difference from the median of each 8 day period (uses checkboxes)");
+                    d3.select("#all-data-periodic-checkboxes")
+                        .append("div")
+                        .attr("id", "all-data-periodic-checkboxes-timeseries")
+                        .classed("all-graph-wrapper", true);
+                    d3.select("#all-data-periodic-checkboxes")
+                        .append("div")
+                        .attr("id", "all-data-periodic-checkboxes-polar")
+                        .classed("all-graph-wrapper", true);
                     d3.select("#all-data-timescale")
                         .html("")
                         .append("h3")
@@ -203,16 +234,17 @@
                         .html("")
                         .append("h3")
                         .text("Colors show the differnce from the overall median of the data");
+
                     makeOverlapingLineGraph(data, loc, "#all-data-timescale");
                     makeLineGraph(data, loc, "#all-data-timescale");
                     drawPolar(data, loc, "#all-data-timescale");
 
-                    makeUpDownOverlapingLineGraph(data, loc, "#all-data-periodic");
-                    makeUpDownLineGraph(data, loc, "#all-data-periodic");
-                    drawUpDownPolar(data, loc, "#all-data-periodic");
+                    makeUpDownOverlapingLineGraph(data, loc, "#all-data-periodic-timeseries");
+                    makeUpDownLineGraph(data, loc, "#all-data-periodic-timeseries-all");
+                    drawUpDownPolar(data, loc, "#all-data-periodic-polar");
 
-                    makeUpDownOverlapingLineGraphWithCheckboxes(data, loc, "#all-data-periodic-checkboxes");
-                    drawUpDownPolarWithCheckboxes(data, loc, "#all-data-periodic-checkboxes");
+                    makeUpDownOverlapingLineGraphWithCheckboxes(data, loc, "#all-data-periodic-checkboxes-timeseries");
+                    drawUpDownPolarWithCheckboxes(data, loc, "#all-data-periodic-checkboxes-polar");
 
                     makeUpDownAverageOverlapingLineGraph(data, loc, "#all-data-median");
                     makeUpDownAverageLineGraph(data, loc, "#all-data-median");
